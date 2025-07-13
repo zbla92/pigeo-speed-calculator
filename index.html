@@ -89,6 +89,49 @@
             appearance: none;
         }
 
+        /* Larger time inputs */
+        .time-inputs input[type="number"] {
+            width: 70px !important;
+            font-size: 1.4em;
+            padding: 10px 8px;
+            text-align: center;
+            margin-right: 6px;
+        }
+        .time-inputs input[type="number"]:last-child {
+            margin-right: 0;
+        }
+
+        /* Osiguraj da se prikazuju sekunde u time input poljima */
+        input[type="time"]::-webkit-datetime-edit-second-field {
+            display: block !important;
+        }
+
+        input[type="time"]::-webkit-datetime-edit-minute-field {
+            display: block !important;
+        }
+
+        input[type="time"]::-webkit-datetime-edit-hour-field {
+            display: block !important;
+        }
+
+        /* iOS specific styles to show seconds */
+        input[type="time"] {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* Force display of seconds on iOS */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            display: none;
+        }
+
+        /* Custom styling for time inputs to ensure seconds are visible */
+        input[type="time"] {
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 1px;
+        }
+
         .input-group input:focus {
             outline: none;
             border-color: #667eea;
@@ -740,8 +783,12 @@
             <div class="input-section">
                 <h2 style="margin-bottom: 20px; color: #333;">Podešavanje Trke</h2>
                 <div class="input-group">
-                    <label for="releaseTime">Vreme Puštanja</label>
-                    <input type="time" id="releaseTime" step="1" required>
+                    <label>Vreme Puštanja</label>
+                    <div class="time-inputs">
+                        <input type="number" id="releaseHour" min="0" max="24" placeholder="HH" required style="width:70px;">
+                        <input type="number" id="releaseMinute" min="0" max="60" placeholder="MM" required style="width:70px;">
+                        <input type="number" id="releaseSecond" min="0" max="60" placeholder="SS" required style="width:70px;">
+                    </div>
                 </div>
                 <div class="input-group">
                     <label for="distance">Rastojanje (km)</label>
@@ -778,8 +825,13 @@
                 <input type="text" id="modalPigeonName" placeholder="Unesite ime goluba" required>
             </div>
             <div class="input-group">
-                <label for="modalArrivalTime">Vreme Dolaska</label>
-                <input type="time" id="modalArrivalTime" step="1" required>
+                <label>Vreme Dolaska</label>
+                <div class="time-inputs">
+                    <input type="number" id="arrivalHour" min="0" max="24" placeholder="HH" required style="width:70px;">
+                    <input type="number" id="arrivalMinute" min="0" max="60" placeholder="MM" required style="width:70px;">
+                    <input type="number" id="arrivalSecond" min="0" max="60" placeholder="SS" required style="width:70px;">
+                </div>
+                <small id="arrivalTimeHelp" style="color:#888;display:block;margin-top:4px;">Format: hh:mm:ss</small>
             </div>
             <button class="btn" onclick="savePigeon()" style="margin-top: 20px;">Sačuvaj Goluba</button>
         </div>
@@ -814,16 +866,92 @@
                 var releaseTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
                 var arrivalTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
                 
-                document.getElementById('releaseTime').value = releaseTime.getHours().toString().padStart(2, '0') + ':' + releaseTime.getMinutes().toString().padStart(2, '0') + ':' + releaseTime.getSeconds().toString().padStart(2, '0');
-                document.getElementById('arrivalTime').value = arrivalTime.getHours().toString().padStart(2, '0') + ':' + arrivalTime.getMinutes().toString().padStart(2, '0') + ':' + arrivalTime.getSeconds().toString().padStart(2, '0');
+                // Format time with seconds
+                var releaseTimeStr = formatTimeWithSeconds(releaseTime);
+                var arrivalTimeStr = formatTimeWithSeconds(arrivalTime);
+                
+                document.getElementById('releaseHour').value = releaseTime.getHours();
+                document.getElementById('releaseMinute').value = releaseTime.getMinutes();
+                document.getElementById('releaseSecond').value = releaseTime.getSeconds();
+                
+                document.getElementById('distance').value = '100'; // Default distance
+                
+                // Add event listener for distance field
+                document.getElementById('distance').addEventListener('change', function() {
+                    raceData.distance = parseFloat(this.value) || 0;
+                });
+                
+                // Add event listener for distance input to update race data
+                document.getElementById('distance').addEventListener('input', function() {
+                    raceData.distance = parseFloat(this.value) || 0;
+                });
+                
+                // Also set the race data
+                raceData.releaseTime = releaseTimeStr;
+                raceData.distance = 100; // Default distance
+                
+                // Add event listeners to ensure seconds are always shown
+                document.getElementById('releaseHour').addEventListener('change', function() {
+                    this.value = ensureTimeWithSeconds(this.value);
+                    raceData.releaseTime = this.value;
+                });
+                
+                document.getElementById('releaseMinute').addEventListener('change', function() {
+                    this.value = ensureTimeWithSeconds(this.value);
+                });
+                
+                document.getElementById('releaseSecond').addEventListener('change', function() {
+                    this.value = ensureTimeWithSeconds(this.value);
+                });
+                
+                // Add event listener for release time input to update race data
+                document.getElementById('releaseHour').addEventListener('input', function() {
+                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                });
+                
+                document.getElementById('releaseMinute').addEventListener('input', function() {
+                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                });
+                
+                document.getElementById('releaseSecond').addEventListener('input', function() {
+                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                });
+            }
+
+            // Ensure time input always includes seconds
+            function ensureTimeWithSeconds(timeStr) {
+                if (!timeStr) return timeStr;
+                
+                var parts = timeStr.split(':');
+                if (parts.length === 2) {
+                    // Only hours and minutes provided, add seconds
+                    return timeStr + ':00';
+                } else if (parts.length === 3) {
+                    // Hours, minutes, and seconds provided
+                    return timeStr;
+                }
+                return timeStr;
+            }
+
+            // Format Date object to time string with seconds
+            function formatTimeWithSeconds(date) {
+                return date.getHours().toString().padStart(2, '0') + ':' + 
+                       date.getMinutes().toString().padStart(2, '0') + ':' + 
+                       date.getSeconds().toString().padStart(2, '0');
             }
 
             function openAddModal() {
                 editingPigeonId = null;
                 document.getElementById('modalTitle').textContent = 'Dodaj Novog Goluba';
                 document.getElementById('modalPigeonName').value = '';
-                document.getElementById('modalArrivalTime').value = '';
+                // Set default arrival time to current time in HH:MM:SS
+                var now = new Date();
+                var defaultArrivalTime = formatTimeWithSeconds(now);
+                document.getElementById('arrivalHour').value = now.getHours();
+                document.getElementById('arrivalMinute').value = now.getMinutes();
+                document.getElementById('arrivalSecond').value = now.getSeconds();
                 document.getElementById('pigeonModal').style.display = 'block';
+                setupArrivalTimeInput();
             }
 
             function openEditModal(pigeonId) {
@@ -833,8 +961,16 @@
                 editingPigeonId = pigeonId;
                 document.getElementById('modalTitle').textContent = 'Izmeni Goluba';
                 document.getElementById('modalPigeonName').value = pigeon.name;
-                document.getElementById('modalArrivalTime').value = pigeon.arrivalTime;
+                
+                // Ensure arrival time has seconds
+                var arrivalTimeWithSeconds = ensureTimeWithSeconds(pigeon.arrivalTime);
+                var arrivalParts = arrivalTimeWithSeconds.split(':');
+                document.getElementById('arrivalHour').value = parseInt(arrivalParts[0]);
+                document.getElementById('arrivalMinute').value = parseInt(arrivalParts[1]);
+                document.getElementById('arrivalSecond').value = parseInt(arrivalParts[2]);
+                
                 document.getElementById('pigeonModal').style.display = 'block';
+                setupArrivalTimeInput();
             }
 
             function closeModal() {
@@ -845,8 +981,14 @@
             function savePigeon() {
                 var name = document.getElementById('modalPigeonName').value.trim();
                 var distance = parseFloat(document.getElementById('distance').value);
-                var releaseTime = document.getElementById('releaseTime').value;
-                var arrivalTime = document.getElementById('modalArrivalTime').value;
+                var releaseTime = ensureTimeWithSeconds(document.getElementById('releaseHour').value + ':' + document.getElementById('releaseMinute').value + ':' + document.getElementById('releaseSecond').value);
+                var arrivalTime = ensureTimeWithSeconds(document.getElementById('arrivalHour').value + ':' + document.getElementById('arrivalMinute').value + ':' + document.getElementById('arrivalSecond').value);
+
+                // Validate arrival time format
+                if (!/^\d{2}:\d{2}:\d{2}$/.test(arrivalTime)) {
+                    alert('Vreme dolaska mora biti u formatu hh:mm:ss');
+                    return;
+                }
 
                 if (!name || isNaN(distance) || !releaseTime || !arrivalTime) {
                     alert('Molimo popunite sva polja');
@@ -865,22 +1007,30 @@
                 var arrivalMinute = parseInt(arrivalParts[1]);
                 var arrivalSecond = parseInt(arrivalParts[2]);
 
-                if (!isTimeAfter(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond)) {
-                    alert('Vreme dolaska mora biti nakon vremena puštanja');
-                    return;
-                }
+                if (
+  arrivalHour < releaseHour ||
+  (arrivalHour === releaseHour && arrivalMinute < releaseMinute) ||
+  (arrivalHour === releaseHour && arrivalMinute === releaseMinute && arrivalSecond <= releaseSecond)
+) {
+  alert('Vreme dolaska mora biti POSLE vremena puštanja!');
+  return;
+}
 
-                if (!raceData.releaseTime) {
-                    raceData.releaseTime = releaseTime;
-                    raceData.distance = distance;
-                }
+                // Always update race data with formatted times
+                raceData.releaseTime = ensureTimeWithSeconds(releaseTime);
+                raceData.distance = distance;
+                
+                // Update the input field as well
+                document.getElementById('releaseHour').value = releaseHour;
+                document.getElementById('releaseMinute').value = releaseMinute;
+                document.getElementById('releaseSecond').value = releaseSecond;
 
                 if (editingPigeonId) {
                     // Edit existing pigeon
                     var pigeonIndex = pigeons.findIndex(p => p.id === editingPigeonId);
                     if (pigeonIndex !== -1) {
                         pigeons[pigeonIndex].name = name;
-                        pigeons[pigeonIndex].arrivalTime = arrivalTime;
+                        pigeons[pigeonIndex].arrivalTime = ensureTimeWithSeconds(arrivalTime);
                         pigeons[pigeonIndex].speed = calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance);
                     }
                 } else {
@@ -888,11 +1038,16 @@
                     var pigeon = {
                         id: Date.now(),
                         name: name,
-                        arrivalTime: arrivalTime,
+                        arrivalTime: ensureTimeWithSeconds(arrivalTime),
                         speed: calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance)
                     };
                     pigeons.push(pigeon);
                 }
+                
+                // Update the modal input field as well
+                document.getElementById('arrivalHour').value = arrivalHour;
+                document.getElementById('arrivalMinute').value = arrivalMinute;
+                document.getElementById('arrivalSecond').value = arrivalSecond;
 
                 closeModal();
                 updateDisplay();
@@ -1004,8 +1159,8 @@
                             bVal = b.name.toLowerCase();
                             break;
                         case 'arrival':
-                            aVal = a.arrivalTime;
-                            bVal = b.arrivalTime;
+                            aVal = ensureTimeWithSeconds(a.arrivalTime);
+                            bVal = ensureTimeWithSeconds(b.arrivalTime);
                             break;
                         case 'distance':
                             aVal = raceData.distance;
@@ -1054,7 +1209,7 @@
                     var pigeon = pigeons[i];
                     html += '<tr>';
                     html += '<td>' + pigeon.name + '</td>';
-                    html += '<td>' + pigeon.arrivalTime + '</td>';
+                    html += '<td>' + ensureTimeWithSeconds(pigeon.arrivalTime) + '</td>';
                     html += '<td>' + raceData.distance + ' km</td>';
                     html += '<td>' + getSpeedDisplay(pigeon.speed) + '</td>';
                     html += '<td>';
@@ -1081,6 +1236,25 @@
                 });
             }
 
+            function setupArrivalTimeInput() {
+                var inputs = document.querySelectorAll('.time-inputs input');
+                inputs.forEach(function(input) {
+                    input.addEventListener('input', function(e) {
+                        var val = input.value.replace(/[^0-9]/g, '');
+                        if (val.length > 2) val = val.slice(0,2); // Keep only 2 digits for HH or MM
+                        // Pad with zeros to always have 2 digits
+                        val = val.padStart(2, '0');
+                        input.value = val;
+                    });
+                    input.addEventListener('blur', function() {
+                        // On blur, ensure always 2 digits
+                        var val = input.value.replace(/[^0-9]/g, '');
+                        val = val.padStart(2, '0');
+                        input.value = val;
+                    });
+                });
+            }
+
             // Make functions globally available
             window.openAddModal = openAddModal;
             window.openEditModal = openEditModal;
@@ -1089,6 +1263,7 @@
             window.deletePigeon = deletePigeon;
             window.toggleGlobalSpeedUnit = toggleGlobalSpeedUnit;
             window.sortPigeons = sortPigeons;
+            window.setupArrivalTimeInput = setupArrivalTimeInput; // Add this line
 
             // Initialize when page loads
             if (document.readyState === 'loading') {
