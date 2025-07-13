@@ -770,6 +770,48 @@
                 font-size: 14px;
             }
         }
+        /* Custom time picker styles */
+        .time-picker-columns {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .picker-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .picker-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+        .picker-scroll {
+            width: 60px;
+            height: 160px;
+            overflow-y: scroll;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e1e5e9;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            text-align: center;
+            font-size: 1.3em;
+            scrollbar-width: thin;
+        }
+        .picker-item {
+            padding: 10px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .picker-item.selected {
+            background: #667eea;
+            color: #fff;
+            font-weight: bold;
+            border-radius: 6px;
+        }
+        .picker-item:hover {
+            background: #e0e7ff;
+        }
     </style>
 </head>
 <body>
@@ -784,11 +826,8 @@
                 <h2 style="margin-bottom: 20px; color: #333;">Podešavanje Trke</h2>
                 <div class="input-group">
                     <label>Vreme Puštanja</label>
-                    <div class="time-inputs">
-                        <input type="number" id="releaseHour" min="0" max="24" placeholder="HH" required style="width:70px;">
-                        <input type="number" id="releaseMinute" min="0" max="60" placeholder="MM" required style="width:70px;">
-                        <input type="number" id="releaseSecond" min="0" max="60" placeholder="SS" required style="width:70px;">
-                    </div>
+                    <button class="btn" type="button" id="openReleasePicker" style="width:180px;">Izaberi vreme</button>
+                    <span id="releaseTimeDisplay" style="margin-left:10px;font-size:1.2em;vertical-align:middle;"></span>
                 </div>
                 <div class="input-group">
                     <label for="distance">Rastojanje (km)</label>
@@ -813,8 +852,6 @@
         </div>
     </div>
 
-    </div>
-
     <!-- Add/Edit Pigeon Modal -->
     <div id="pigeonModal" class="modal">
         <div class="modal-content">
@@ -826,15 +863,37 @@
             </div>
             <div class="input-group">
                 <label>Vreme Dolaska</label>
-                <div class="time-inputs">
-                    <input type="number" id="arrivalHour" min="0" max="24" placeholder="HH" required style="width:70px;">
-                    <input type="number" id="arrivalMinute" min="0" max="60" placeholder="MM" required style="width:70px;">
-                    <input type="number" id="arrivalSecond" min="0" max="60" placeholder="SS" required style="width:70px;">
-                </div>
-                <small id="arrivalTimeHelp" style="color:#888;display:block;margin-top:4px;">Format: hh:mm:ss</small>
+                <button class="btn" type="button" id="openArrivalPicker" style="width:180px;">Izaberi vreme</button>
+                <span id="arrivalTimeDisplay" style="margin-left:10px;font-size:1.2em;vertical-align:middle;"></span>
             </div>
             <button class="btn" onclick="savePigeon()" style="margin-top: 20px;">Sačuvaj Goluba</button>
         </div>
+    </div>
+
+    <!-- Custom Time Picker Modal -->
+    <div id="timePickerModal" class="modal">
+      <div class="modal-content" style="max-width:340px;">
+        <span class="close" onclick="closeTimePicker()">&times;</span>
+        <h3 id="timePickerTitle" style="margin-bottom: 20px; color: #333;">Izaberi Vreme</h3>
+        <div class="time-picker-columns">
+          <div class="picker-col">
+            <div class="picker-label">Sati</div>
+            <div class="picker-scroll" id="pickerHours"></div>
+          </div>
+          <div class="picker-col">
+            <div class="picker-label">Minuti</div>
+            <div class="picker-scroll" id="pickerMinutes"></div>
+          </div>
+          <div class="picker-col">
+            <div class="picker-label">Sekunde</div>
+            <div class="picker-scroll" id="pickerSeconds"></div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:20px;">
+          <button class="btn" style="width:120px;display:inline-block;" onclick="confirmTimePicker()">Potvrdi</button>
+          <button class="btn" style="width:120px;display:inline-block;background:#eee;color:#333;margin-left:10px;" onclick="closeTimePicker()">Otkaži</button>
+        </div>
+      </div>
     </div>
 
     <div class="footer">
@@ -870,9 +929,12 @@
                 var releaseTimeStr = formatTimeWithSeconds(releaseTime);
                 var arrivalTimeStr = formatTimeWithSeconds(arrivalTime);
                 
-                document.getElementById('releaseHour').value = releaseTime.getHours();
-                document.getElementById('releaseMinute').value = releaseTime.getMinutes();
-                document.getElementById('releaseSecond').value = releaseTime.getSeconds();
+                // Set initial values for the custom pickers
+                releaseTime = {h: releaseTime.getHours(), m: releaseTime.getMinutes(), s: releaseTime.getSeconds()};
+                arrivalTime = {h: arrivalTime.getHours(), m: arrivalTime.getMinutes(), s: arrivalTime.getSeconds()};
+
+                setReleaseTimeDisplay(releaseTime.h, releaseTime.m, releaseTime.s);
+                setArrivalTimeDisplay(arrivalTime.h, arrivalTime.m, arrivalTime.s);
                 
                 document.getElementById('distance').value = '100'; // Default distance
                 
@@ -891,31 +953,32 @@
                 raceData.distance = 100; // Default distance
                 
                 // Add event listeners to ensure seconds are always shown
-                document.getElementById('releaseHour').addEventListener('change', function() {
-                    this.value = ensureTimeWithSeconds(this.value);
-                    raceData.releaseTime = this.value;
-                });
+                // These are no longer needed as values are set directly
+                // document.getElementById('releaseHour').addEventListener('change', function() {
+                //     this.value = ensureTimeWithSeconds(this.value);
+                //     raceData.releaseTime = this.value;
+                // });
                 
-                document.getElementById('releaseMinute').addEventListener('change', function() {
-                    this.value = ensureTimeWithSeconds(this.value);
-                });
+                // document.getElementById('releaseMinute').addEventListener('change', function() {
+                //     this.value = ensureTimeWithSeconds(this.value);
+                // });
                 
-                document.getElementById('releaseSecond').addEventListener('change', function() {
-                    this.value = ensureTimeWithSeconds(this.value);
-                });
+                // document.getElementById('releaseSecond').addEventListener('change', function() {
+                //     this.value = ensureTimeWithSeconds(this.value);
+                // });
                 
                 // Add event listener for release time input to update race data
-                document.getElementById('releaseHour').addEventListener('input', function() {
-                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
-                });
+                // document.getElementById('releaseHour').addEventListener('input', function() {
+                //     raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                // });
                 
-                document.getElementById('releaseMinute').addEventListener('input', function() {
-                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
-                });
+                // document.getElementById('releaseMinute').addEventListener('input', function() {
+                //     raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                // });
                 
-                document.getElementById('releaseSecond').addEventListener('input', function() {
-                    raceData.releaseTime = ensureTimeWithSeconds(this.value);
-                });
+                // document.getElementById('releaseSecond').addEventListener('input', function() {
+                //     raceData.releaseTime = ensureTimeWithSeconds(this.value);
+                // });
             }
 
             // Ensure time input always includes seconds
@@ -944,14 +1007,11 @@
                 editingPigeonId = null;
                 document.getElementById('modalTitle').textContent = 'Dodaj Novog Goluba';
                 document.getElementById('modalPigeonName').value = '';
-                // Set default arrival time to current time in HH:MM:SS
+                // Set arrivalTime to current time and update display
                 var now = new Date();
-                var defaultArrivalTime = formatTimeWithSeconds(now);
-                document.getElementById('arrivalHour').value = now.getHours();
-                document.getElementById('arrivalMinute').value = now.getMinutes();
-                document.getElementById('arrivalSecond').value = now.getSeconds();
+                arrivalTime = {h: now.getHours(), m: now.getMinutes(), s: now.getSeconds()};
+                setArrivalTimeDisplay(arrivalTime.h, arrivalTime.m, arrivalTime.s);
                 document.getElementById('pigeonModal').style.display = 'block';
-                setupArrivalTimeInput();
             }
 
             function openEditModal(pigeonId) {
@@ -965,12 +1025,11 @@
                 // Ensure arrival time has seconds
                 var arrivalTimeWithSeconds = ensureTimeWithSeconds(pigeon.arrivalTime);
                 var arrivalParts = arrivalTimeWithSeconds.split(':');
-                document.getElementById('arrivalHour').value = parseInt(arrivalParts[0]);
-                document.getElementById('arrivalMinute').value = parseInt(arrivalParts[1]);
-                document.getElementById('arrivalSecond').value = parseInt(arrivalParts[2]);
+                arrivalTime = {h: parseInt(arrivalParts[0]), m: parseInt(arrivalParts[1]), s: parseInt(arrivalParts[2])};
+                setArrivalTimeDisplay(arrivalTime.h, arrivalTime.m, arrivalTime.s);
                 
                 document.getElementById('pigeonModal').style.display = 'block';
-                setupArrivalTimeInput();
+                // setupArrivalTimeInput(); // No longer needed
             }
 
             function closeModal() {
@@ -981,56 +1040,39 @@
             function savePigeon() {
                 var name = document.getElementById('modalPigeonName').value.trim();
                 var distance = parseFloat(document.getElementById('distance').value);
-                var releaseTime = ensureTimeWithSeconds(document.getElementById('releaseHour').value + ':' + document.getElementById('releaseMinute').value + ':' + document.getElementById('releaseSecond').value);
-                var arrivalTime = ensureTimeWithSeconds(document.getElementById('arrivalHour').value + ':' + document.getElementById('arrivalMinute').value + ':' + document.getElementById('arrivalSecond').value);
+                // Use releaseTime and arrivalTime objects from the custom picker
+                var releaseHour = releaseTime.h;
+                var releaseMinute = releaseTime.m;
+                var releaseSecond = releaseTime.s;
+                var arrivalHour = arrivalTime.h;
+                var arrivalMinute = arrivalTime.m;
+                var arrivalSecond = arrivalTime.s;
+                var releaseTimeStr = formatTimeString(releaseHour, releaseMinute, releaseSecond);
+                var arrivalTimeStr = formatTimeString(arrivalHour, arrivalMinute, arrivalSecond);
 
-                // Validate arrival time format
-                if (!/^\d{2}:\d{2}:\d{2}$/.test(arrivalTime)) {
-                    alert('Vreme dolaska mora biti u formatu hh:mm:ss');
-                    return;
-                }
-
-                if (!name || isNaN(distance) || !releaseTime || !arrivalTime) {
+                if (!name || isNaN(distance)) {
                     alert('Molimo popunite sva polja');
                     return;
                 }
 
-                // Parse time strings
-                var releaseParts = releaseTime.split(':');
-                var arrivalParts = arrivalTime.split(':');
-                
-                var releaseHour = parseInt(releaseParts[0]);
-                var releaseMinute = parseInt(releaseParts[1]);
-                var releaseSecond = parseInt(releaseParts[2]);
-                
-                var arrivalHour = parseInt(arrivalParts[0]);
-                var arrivalMinute = parseInt(arrivalParts[1]);
-                var arrivalSecond = parseInt(arrivalParts[2]);
-
-                if (
-  arrivalHour < releaseHour ||
-  (arrivalHour === releaseHour && arrivalMinute < releaseMinute) ||
-  (arrivalHour === releaseHour && arrivalMinute === releaseMinute && arrivalSecond <= releaseSecond)
-) {
-  alert('Vreme dolaska mora biti POSLE vremena puštanja!');
-  return;
-}
+                // Arrival must be after release
+                var releaseTotal = releaseHour * 3600 + releaseMinute * 60 + releaseSecond;
+                var arrivalTotal = arrivalHour * 3600 + arrivalMinute * 60 + arrivalSecond;
+                if (arrivalTotal <= releaseTotal) {
+                    alert('Vreme dolaska mora biti POSLE vremena puštanja!');
+                    return;
+                }
 
                 // Always update race data with formatted times
-                raceData.releaseTime = ensureTimeWithSeconds(releaseTime);
+                raceData.releaseTime = releaseTimeStr;
                 raceData.distance = distance;
-                
-                // Update the input field as well
-                document.getElementById('releaseHour').value = releaseHour;
-                document.getElementById('releaseMinute').value = releaseMinute;
-                document.getElementById('releaseSecond').value = releaseSecond;
 
                 if (editingPigeonId) {
                     // Edit existing pigeon
                     var pigeonIndex = pigeons.findIndex(p => p.id === editingPigeonId);
                     if (pigeonIndex !== -1) {
                         pigeons[pigeonIndex].name = name;
-                        pigeons[pigeonIndex].arrivalTime = ensureTimeWithSeconds(arrivalTime);
+                        pigeons[pigeonIndex].arrivalTime = arrivalTimeStr;
                         pigeons[pigeonIndex].speed = calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance);
                     }
                 } else {
@@ -1038,17 +1080,11 @@
                     var pigeon = {
                         id: Date.now(),
                         name: name,
-                        arrivalTime: ensureTimeWithSeconds(arrivalTime),
+                        arrivalTime: arrivalTimeStr,
                         speed: calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance)
                     };
                     pigeons.push(pigeon);
                 }
-                
-                // Update the modal input field as well
-                document.getElementById('arrivalHour').value = arrivalHour;
-                document.getElementById('arrivalMinute').value = arrivalMinute;
-                document.getElementById('arrivalSecond').value = arrivalSecond;
-
                 closeModal();
                 updateDisplay();
             }
@@ -1236,24 +1272,7 @@
                 });
             }
 
-            function setupArrivalTimeInput() {
-                var inputs = document.querySelectorAll('.time-inputs input');
-                inputs.forEach(function(input) {
-                    input.addEventListener('input', function(e) {
-                        var val = input.value.replace(/[^0-9]/g, '');
-                        if (val.length > 2) val = val.slice(0,2); // Keep only 2 digits for HH or MM
-                        // Pad with zeros to always have 2 digits
-                        val = val.padStart(2, '0');
-                        input.value = val;
-                    });
-                    input.addEventListener('blur', function() {
-                        // On blur, ensure always 2 digits
-                        var val = input.value.replace(/[^0-9]/g, '');
-                        val = val.padStart(2, '0');
-                        input.value = val;
-                    });
-                });
-            }
+            // setupArrivalTimeInput is no longer needed
 
             // Make functions globally available
             window.openAddModal = openAddModal;
@@ -1263,7 +1282,7 @@
             window.deletePigeon = deletePigeon;
             window.toggleGlobalSpeedUnit = toggleGlobalSpeedUnit;
             window.sortPigeons = sortPigeons;
-            window.setupArrivalTimeInput = setupArrivalTimeInput; // Add this line
+            // window.setupArrivalTimeInput = setupArrivalTimeInput; // Remove this line
 
             // Initialize when page loads
             if (document.readyState === 'loading') {
@@ -1271,6 +1290,77 @@
             } else {
                 initApp();
             }
+        })();
+
+        // JS: Add logic for custom time picker
+        let timePickerTarget = null;
+        let timePickerCallback = null;
+        let pickerSelected = {h:0,m:0,s:0};
+        function openTimePicker(target, initial, cb) {
+          timePickerTarget = target;
+          timePickerCallback = cb;
+          document.getElementById('timePickerModal').style.display = 'block';
+          document.getElementById('timePickerTitle').textContent = target === 'release' ? 'Izaberi Vreme Puštanja' : 'Izaberi Vreme Dolaska';
+          // Fill pickers
+          fillPicker('pickerHours', 0, 24, initial.h);
+          fillPicker('pickerMinutes', 0, 60, initial.m);
+          fillPicker('pickerSeconds', 0, 60, initial.s);
+        }
+        function fillPicker(id, min, max, selected) {
+          let html = '';
+          for(let i=min;i<=max;i++) {
+            html += `<div class="picker-item${i===selected?' selected':''}" data-val="${i}">${i.toString().padStart(2,'0')}</div>`;
+          }
+          const el = document.getElementById(id);
+          el.innerHTML = html;
+          Array.from(el.children).forEach(child => {
+            child.onclick = function() {
+              Array.from(el.children).forEach(c=>c.classList.remove('selected'));
+              child.classList.add('selected');
+              if(id==='pickerHours') pickerSelected.h = parseInt(child.dataset.val);
+              if(id==='pickerMinutes') pickerSelected.m = parseInt(child.dataset.val);
+              if(id==='pickerSeconds') pickerSelected.s = parseInt(child.dataset.val);
+            };
+          });
+          // Set initial
+          pickerSelected[id==='pickerHours'?'h':id==='pickerMinutes'?'m':'s'] = selected;
+        }
+        function closeTimePicker() {
+          document.getElementById('timePickerModal').style.display = 'none';
+        }
+        function confirmTimePicker() {
+          if(timePickerCallback) timePickerCallback({...pickerSelected});
+          closeTimePicker();
+        }
+
+        // Hook up buttons and display
+        function setReleaseTimeDisplay(h,m,s) {
+          document.getElementById('releaseTimeDisplay').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+        function setArrivalTimeDisplay(h,m,s) {
+          document.getElementById('arrivalTimeDisplay').textContent = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }
+        let releaseTime = {h:0,m:0,s:0};
+        let arrivalTime = {h:0,m:0,s:0};
+        document.getElementById('openReleasePicker').onclick = function() {
+          openTimePicker('release', releaseTime, function(val) {
+            releaseTime = val;
+            setReleaseTimeDisplay(val.h,val.m,val.s);
+          });
+        };
+        document.getElementById('openArrivalPicker').onclick = function() {
+          openTimePicker('arrival', arrivalTime, function(val) {
+            arrivalTime = val;
+            setArrivalTimeDisplay(val.h,val.m,val.s);
+          });
+        };
+        // On app init, set to current time
+        (function(){
+          const now = new Date();
+          releaseTime = {h:now.getHours(),m:now.getMinutes(),s:now.getSeconds()};
+          arrivalTime = {h:now.getHours(),m:now.getMinutes(),s:now.getSeconds()};
+          setReleaseTimeDisplay(releaseTime.h,releaseTime.m,releaseTime.s);
+          setArrivalTimeDisplay(arrivalTime.h,arrivalTime.m,arrivalTime.s);
         })();
     </script>
 
