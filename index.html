@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Racing Pigeon Tracker">
-    <meta name="description" content="Track your racing pigeons' speed and performance with this mobile-friendly app">
-    <meta name="keywords" content="racing pigeon, pigeon tracker, speed calculator, pigeon racing">
-    <title>Racing Pigeon Tracker</title>
+    <meta name="apple-mobile-web-app-title" content="Pratilac Trkaćih Golubova">
+    <meta name="description" content="Pratite brzinu i performanse vaših trkaćih golubova sa ovom aplikacijom prilagođenom mobilnim uređajima">
+    <meta name="keywords" content="trkaći golubovi, pratilac golubova, kalkulator brzine, trke golubova">
+    <title>Pratilac Trkaćih Golubova</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏁</text></svg>">
     <style>
         * {
@@ -112,6 +112,306 @@
             text-align: center;
             margin-top: 5px;
             font-weight: 600;
+        }
+
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .view-btn {
+            background: #f8f9fa;
+            border: 2px solid #e1e5e9;
+            color: #666;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .pigeon-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pigeon-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .pigeon-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e1e5e9;
+            font-size: 14px;
+        }
+
+        .pigeon-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .pigeon-table .speed-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pigeon-table .speed-toggle {
+            margin: 0;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .pigeon-table .delete-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .pigeon-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .pigeon-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            min-height: auto;
+        }
+
+        .pigeon-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .pigeon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .pigeon-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .pigeon-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .detail-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .speed-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .speed-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .speed-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .speed-toggle {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .speed-toggle:active {
+            background: #218838;
+        }
+
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .delete-btn:active {
+            background: #ff3742;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .global-speed-toggle {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 20px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .global-speed-toggle:active {
+            background: #218838;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
+
+        .sortable-header:hover {
+            background: #f0f0f0;
+        }
+
+        .sortable-header::after {
+            content: '↕';
+            position: absolute;
+            right: 5px;
+            color: #999;
+        }
+
+        .sortable-header.sort-asc::after {
+            content: '↑';
+            color: #667eea;
+        }
+
+        .sortable-header.sort-desc::after {
+            content: '↓';
+            color: #667eea;
+        }
+
+        .edit-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-right: 5px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .edit-btn:active {
+            background: #0056b3;
         }
 
         .btn {
@@ -293,83 +593,201 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Reklame */
+        .advertisements {
+            max-width: 600px;
+            margin: 40px auto 20px;
+            padding: 0 20px;
+        }
+
+        .ad-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ad-card:nth-child(2) {
+            background: linear-gradient(135deg, #ffa726 0%, #ff7043 100%);
+        }
+
+        .ad-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .ad-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .ad-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .ad-content h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .ad-content p {
+            font-size: 16px;
+            margin-bottom: 8px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .ad-content a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .ad-content a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .ad-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            font-style: italic;
+            margin-bottom: 15px !important;
+        }
+
+        .ad-button {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .ad-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .ad-button:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .advertisements {
+                padding: 0 15px;
+                margin: 30px auto 15px;
+            }
+
+            .ad-card {
+                padding: 20px;
+            }
+
+            .ad-content h3 {
+                font-size: 18px;
+            }
+
+            .ad-content p {
+                font-size: 14px;
+            }
+
+            .ad-button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏁 Racing Pigeon Tracker</h1>
-            <p>Track your pigeons' speed and performance</p>
+            <h1>🏁 Pratilac Trkaćih Golubova</h1>
+            <p>Pratite brzinu i performanse vaših golubova</p>
         </div>
         
         <div class="content">
             <div class="input-section">
-                <h2 style="margin-bottom: 20px; color: #333;">Race Setup</h2>
+                <h2 style="margin-bottom: 20px; color: #333;">Podešavanje Trke</h2>
                 <div class="input-group">
-                    <label for="releaseTime">Time of Release</label>
-                    <div class="time-inputs">
-                        <div>
-                            <input type="number" id="releaseHour" min="0" max="23" placeholder="HH" required>
-                            <div class="time-label">Hours</div>
-                        </div>
-                        <div>
-                            <input type="number" id="releaseMinute" min="0" max="59" placeholder="MM" required>
-                            <div class="time-label">Minutes</div>
-                        </div>
-                        <div>
-                            <input type="number" id="releaseSecond" min="0" max="59" placeholder="SS" required>
-                            <div class="time-label">Seconds</div>
-                        </div>
-                    </div>
+                    <label for="releaseTime">Vreme Puštanja</label>
+                    <input type="time" id="releaseTime" step="1" required>
                 </div>
                 <div class="input-group">
-                    <label for="distance">Distance (km)</label>
-                    <input type="number" id="distance" step="0.1" min="0" placeholder="Enter distance in kilometers" required>
+                    <label for="distance">Rastojanje (km)</label>
+                    <input type="number" id="distance" step="0.1" min="0" placeholder="Unesite rastojanje u kilometrima" required>
                 </div>
             </div>
 
             <div class="pigeons-section">
-                <h2 style="margin-bottom: 20px; color: #333;">Pigeons</h2>
+                <div class="table-header">
+                    <h2 style="margin: 0; color: #333;">Golubovi</h2>
+                    <button class="btn" onclick="openAddModal()" style="width: auto; padding: 10px 20px;">➕ Dodaj Goluba</button>
+                </div>
+                
+                <button class="global-speed-toggle" onclick="toggleGlobalSpeedUnit()">Prebaci na km/h</button>
+                
                 <div id="pigeonsList">
                     <div class="no-pigeons">
-                        No pigeons added yet. Add your first pigeon below!
+                        Još nema dodatih golubova. Dodajte prvog goluba ispod!
                     </div>
-                </div>
-
-                <div class="add-pigeon-form">
-                    <h3 style="margin-bottom: 20px; color: #333;">Add New Pigeon</h3>
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label for="pigeonName">Pigeon Name</label>
-                            <input type="text" id="pigeonName" placeholder="Enter pigeon name" required>
-                        </div>
-                        <div class="input-group">
-                            <label for="arrivalTime">Arrival Time</label>
-                            <div class="time-inputs">
-                                <div>
-                                    <input type="number" id="arrivalHour" min="0" max="23" placeholder="HH" required>
-                                    <div class="time-label">Hours</div>
-                                </div>
-                                <div>
-                                    <input type="number" id="arrivalMinute" min="0" max="59" placeholder="MM" required>
-                                    <div class="time-label">Minutes</div>
-                                </div>
-                                <div>
-                                    <input type="number" id="arrivalSecond" min="0" max="59" placeholder="SS" required>
-                                    <div class="time-label">Seconds</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <button class="btn" onclick="addPigeon()">➕ Add Pigeon</button>
                 </div>
             </div>
         </div>
     </div>
 
+    </div>
+
+    <!-- Add/Edit Pigeon Modal -->
+    <div id="pigeonModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle" style="margin-bottom: 20px; color: #333;">Dodaj Novog Goluba</h3>
+            <div class="input-group">
+                <label for="modalPigeonName">Ime Goluba</label>
+                <input type="text" id="modalPigeonName" placeholder="Unesite ime goluba" required>
+            </div>
+            <div class="input-group">
+                <label for="modalArrivalTime">Vreme Dolaska</label>
+                <input type="time" id="modalArrivalTime" step="1" required>
+            </div>
+            <button class="btn" onclick="savePigeon()" style="margin-top: 20px;">Sačuvaj Goluba</button>
+        </div>
+    </div>
+
     <div class="footer">
-        <p>Made with ❤️ for pigeon racing enthusiasts</p>
-        <p><a href="https://github.com/zbla92/pigeo-speed-calculator" target="_blank">View on GitHub</a></p>
+        <p>Napravljeno sa ❤️ za ljubitelje trkaćih golubova</p>
+        <p><a href="https://github.com/zbla92/pigeo-speed-calculator" target="_blank">Pogledaj na GitHub-u</a></p>
     </div>
 
     <script>
@@ -383,50 +801,72 @@
             };
             var speedUnits = {};
 
+            // Global variables
+            var currentView = 'table';
+            var globalSpeedUnit = 'm/min'; // Default to meters per minute
+            var editingPigeonId = null;
+            var sortField = null;
+            var sortDirection = 'asc';
+
             // Initialize the app
             function initApp() {
                 var now = new Date();
                 var releaseTime = new Date(now.getTime() + (2 * 60 * 60 * 1000));
                 var arrivalTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
                 
-                document.getElementById('releaseHour').value = releaseTime.getHours();
-                document.getElementById('releaseMinute').value = releaseTime.getMinutes();
-                document.getElementById('releaseSecond').value = 0;
-                
-                document.getElementById('arrivalHour').value = arrivalTime.getHours();
-                document.getElementById('arrivalMinute').value = arrivalTime.getMinutes();
-                document.getElementById('arrivalSecond').value = 0;
+                document.getElementById('releaseTime').value = releaseTime.getHours().toString().padStart(2, '0') + ':' + releaseTime.getMinutes().toString().padStart(2, '0') + ':' + releaseTime.getSeconds().toString().padStart(2, '0');
+                document.getElementById('arrivalTime').value = arrivalTime.getHours().toString().padStart(2, '0') + ':' + arrivalTime.getMinutes().toString().padStart(2, '0') + ':' + arrivalTime.getSeconds().toString().padStart(2, '0');
             }
 
-            function addPigeon() {
-                var name = document.getElementById('pigeonName').value.trim();
+            function openAddModal() {
+                editingPigeonId = null;
+                document.getElementById('modalTitle').textContent = 'Dodaj Novog Goluba';
+                document.getElementById('modalPigeonName').value = '';
+                document.getElementById('modalArrivalTime').value = '';
+                document.getElementById('pigeonModal').style.display = 'block';
+            }
+
+            function openEditModal(pigeonId) {
+                var pigeon = pigeons.find(p => p.id === pigeonId);
+                if (!pigeon) return;
+                
+                editingPigeonId = pigeonId;
+                document.getElementById('modalTitle').textContent = 'Izmeni Goluba';
+                document.getElementById('modalPigeonName').value = pigeon.name;
+                document.getElementById('modalArrivalTime').value = pigeon.arrivalTime;
+                document.getElementById('pigeonModal').style.display = 'block';
+            }
+
+            function closeModal() {
+                document.getElementById('pigeonModal').style.display = 'none';
+                editingPigeonId = null;
+            }
+
+            function savePigeon() {
+                var name = document.getElementById('modalPigeonName').value.trim();
                 var distance = parseFloat(document.getElementById('distance').value);
+                var releaseTime = document.getElementById('releaseTime').value;
+                var arrivalTime = document.getElementById('modalArrivalTime').value;
 
-                var releaseHour = parseInt(document.getElementById('releaseHour').value);
-                var releaseMinute = parseInt(document.getElementById('releaseMinute').value);
-                var releaseSecond = parseInt(document.getElementById('releaseSecond').value);
-
-                var arrivalHour = parseInt(document.getElementById('arrivalHour').value);
-                var arrivalMinute = parseInt(document.getElementById('arrivalMinute').value);
-                var arrivalSecond = parseInt(document.getElementById('arrivalSecond').value);
-
-                if (!name || isNaN(distance) || isNaN(releaseHour) || isNaN(releaseMinute) || isNaN(releaseSecond) || 
-                    isNaN(arrivalHour) || isNaN(arrivalMinute) || isNaN(arrivalSecond)) {
-                    alert('Please fill in all fields');
+                if (!name || isNaN(distance) || !releaseTime || !arrivalTime) {
+                    alert('Molimo popunite sva polja');
                     return;
                 }
 
-                if (releaseHour < 0 || releaseHour > 23 || releaseMinute < 0 || releaseMinute > 59 || releaseSecond < 0 || releaseSecond > 59 ||
-                    arrivalHour < 0 || arrivalHour > 23 || arrivalMinute < 0 || arrivalMinute > 59 || arrivalSecond < 0 || arrivalSecond > 59) {
-                    alert('Please enter valid time values (Hours: 0-23, Minutes: 0-59, Seconds: 0-59)');
-                    return;
-                }
-
-                var releaseTime = formatTimeString(releaseHour, releaseMinute, releaseSecond);
-                var arrivalTime = formatTimeString(arrivalHour, arrivalMinute, arrivalSecond);
+                // Parse time strings
+                var releaseParts = releaseTime.split(':');
+                var arrivalParts = arrivalTime.split(':');
+                
+                var releaseHour = parseInt(releaseParts[0]);
+                var releaseMinute = parseInt(releaseParts[1]);
+                var releaseSecond = parseInt(releaseParts[2]);
+                
+                var arrivalHour = parseInt(arrivalParts[0]);
+                var arrivalMinute = parseInt(arrivalParts[1]);
+                var arrivalSecond = parseInt(arrivalParts[2]);
 
                 if (!isTimeAfter(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond)) {
-                    alert('Arrival time must be after release time');
+                    alert('Vreme dolaska mora biti nakon vremena puštanja');
                     return;
                 }
 
@@ -435,17 +875,27 @@
                     raceData.distance = distance;
                 }
 
-                var pigeon = {
-                    id: Date.now(),
-                    name: name,
-                    arrivalTime: arrivalTime,
-                    speed: calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance)
-                };
+                if (editingPigeonId) {
+                    // Edit existing pigeon
+                    var pigeonIndex = pigeons.findIndex(p => p.id === editingPigeonId);
+                    if (pigeonIndex !== -1) {
+                        pigeons[pigeonIndex].name = name;
+                        pigeons[pigeonIndex].arrivalTime = arrivalTime;
+                        pigeons[pigeonIndex].speed = calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance);
+                    }
+                } else {
+                    // Add new pigeon
+                    var pigeon = {
+                        id: Date.now(),
+                        name: name,
+                        arrivalTime: arrivalTime,
+                        speed: calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance)
+                    };
+                    pigeons.push(pigeon);
+                }
 
-                pigeons.push(pigeon);
-                speedUnits[pigeon.id] = true;
+                closeModal();
                 updateDisplay();
-                clearForm();
             }
 
             function calculateSpeed(releaseHour, releaseMinute, releaseSecond, arrivalHour, arrivalMinute, arrivalSecond, distance) {
@@ -522,53 +972,123 @@
                 updateDisplay();
             }
 
-            function clearForm() {
-                document.getElementById('pigeonName').value = '';
-                document.getElementById('arrivalHour').value = '';
-                document.getElementById('arrivalMinute').value = '';
-                document.getElementById('arrivalSecond').value = '';
+            function toggleGlobalSpeedUnit() {
+                globalSpeedUnit = globalSpeedUnit === 'm/min' ? 'km/h' : 'm/min';
+                var button = document.querySelector('.global-speed-toggle');
+                button.textContent = globalSpeedUnit === 'm/min' ? 'Prebaci na km/h' : 'Prebaci na m/min';
+                updateDisplay();
+            }
+
+            function getSpeedDisplay(speed) {
+                if (globalSpeedUnit === 'm/min') {
+                    return (speed * 1000 / 60).toFixed(1) + ' m/min';
+                } else {
+                    return speed.toFixed(1) + ' km/h';
+                }
+            }
+
+            function sortPigeons(field) {
+                if (sortField === field) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDirection = 'asc';
+                }
+
+                pigeons.sort(function(a, b) {
+                    var aVal, bVal;
+                    
+                    switch(field) {
+                        case 'name':
+                            aVal = a.name.toLowerCase();
+                            bVal = b.name.toLowerCase();
+                            break;
+                        case 'arrival':
+                            aVal = a.arrivalTime;
+                            bVal = b.arrivalTime;
+                            break;
+                        case 'distance':
+                            aVal = raceData.distance;
+                            bVal = raceData.distance;
+                            break;
+                        case 'speed':
+                            aVal = a.speed;
+                            bVal = b.speed;
+                            break;
+                        default:
+                            return 0;
+                    }
+                    
+                    if (sortDirection === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+                
+                updateDisplay();
             }
 
             function updateDisplay() {
                 var pigeonsList = document.getElementById('pigeonsList');
                 
                 if (pigeons.length === 0) {
-                    pigeonsList.innerHTML = '<div class="no-pigeons">No pigeons added yet. Add your first pigeon below!</div>';
+                    pigeonsList.innerHTML = '<div class="no-pigeons">Još nema dodatih golubova. Dodajte prvog goluba ispod!</div>';
                     return;
                 }
 
-                var html = '';
+                updateTableView(pigeonsList);
+            }
+
+            function updateTableView(pigeonsList) {
+                var html = '<table class="pigeon-table">';
+                html += '<thead><tr>';
+                html += '<th class="sortable-header" onclick="sortPigeons(\'name\')" data-field="name">Ime</th>';
+                html += '<th class="sortable-header" onclick="sortPigeons(\'arrival\')" data-field="arrival">Vreme Dolaska</th>';
+                html += '<th class="sortable-header" onclick="sortPigeons(\'distance\')" data-field="distance">Rastojanje</th>';
+                html += '<th class="sortable-header" onclick="sortPigeons(\'speed\')" data-field="speed">Brzina</th>';
+                html += '<th>Akcije</th>';
+                html += '</tr></thead><tbody>';
+                
                 for (var i = 0; i < pigeons.length; i++) {
                     var pigeon = pigeons[i];
-                    html += '<div class="pigeon-card">';
-                    html += '<div class="pigeon-header">';
-                    html += '<div class="pigeon-name">' + pigeon.name + '</div>';
+                    html += '<tr>';
+                    html += '<td>' + pigeon.name + '</td>';
+                    html += '<td>' + pigeon.arrivalTime + '</td>';
+                    html += '<td>' + raceData.distance + ' km</td>';
+                    html += '<td>' + getSpeedDisplay(pigeon.speed) + '</td>';
+                    html += '<td>';
+                    html += '<button class="edit-btn" onclick="openEditModal(' + pigeon.id + ')">✏️</button>';
                     html += '<button class="delete-btn" onclick="deletePigeon(' + pigeon.id + ')">🗑️</button>';
-                    html += '</div>';
-                    html += '<div class="pigeon-details">';
-                    html += '<div class="detail-item">';
-                    html += '<div class="detail-label">Arrival Time</div>';
-                    html += '<div class="detail-value">' + pigeon.arrivalTime + '</div>';
-                    html += '</div>';
-                    html += '<div class="detail-item">';
-                    html += '<div class="detail-label">Distance</div>';
-                    html += '<div class="detail-value">' + raceData.distance + ' km</div>';
-                    html += '</div>';
-                    html += '</div>';
-                    html += '<div class="speed-display">';
-                    html += '<div class="speed-label">Average Speed</div>';
-                    html += '<div class="speed-value" id="speed-' + pigeon.id + '">' + pigeon.speed.toFixed(1) + ' km/h</div>';
-                    html += '<button class="speed-toggle" onclick="toggleSpeedUnit(' + pigeon.id + ')">Switch to m/min</button>';
-                    html += '</div>';
-                    html += '</div>';
+                    html += '</td>';
+                    html += '</tr>';
                 }
+                
+                html += '</tbody></table>';
                 pigeonsList.innerHTML = html;
+                
+                // Update sort indicators
+                updateSortIndicators();
+            }
+
+            function updateSortIndicators() {
+                var headers = document.querySelectorAll('.sortable-header');
+                headers.forEach(function(header) {
+                    header.classList.remove('sort-asc', 'sort-desc');
+                    if (header.getAttribute('data-field') === sortField) {
+                        header.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
             }
 
             // Make functions globally available
-            window.addPigeon = addPigeon;
+            window.openAddModal = openAddModal;
+            window.openEditModal = openEditModal;
+            window.closeModal = closeModal;
+            window.savePigeon = savePigeon;
             window.deletePigeon = deletePigeon;
-            window.toggleSpeedUnit = toggleSpeedUnit;
+            window.toggleGlobalSpeedUnit = toggleGlobalSpeedUnit;
+            window.sortPigeons = sortPigeons;
 
             // Initialize when page loads
             if (document.readyState === 'loading') {
@@ -578,5 +1098,28 @@
             }
         })();
     </script>
+
+    <!-- Reklame -->
+    <div class="advertisements">
+        <div class="ad-card">
+            <div class="ad-icon">🏆</div>
+            <div class="ad-content">
+                <h3>Nemaš dovoljno brze golubove?</h3>
+                <p>Javi se <a href="https://www.facebook.com/slobodan.blaz" target="_blank">@slobodan.blaz</a> da naručiš novu krv!</p>
+                <p class="ad-subtitle">Vrhunski trkaći golubovi za tvoju maticu</p>
+                <a href="https://www.facebook.com/slobodan.blaz" target="_blank" class="ad-button">Naruči sada</a>
+            </div>
+        </div>
+
+        <div class="ad-card">
+            <div class="ad-icon">🍳</div>
+            <div class="ad-content">
+                <h3>Gladan si od čekanja svojih golubova?</h3>
+                <p>Javi se <a href="https://www.instagram.com/farma_blaz/?hl=en" target="_blank">@farma_blaz</a> da naručiš domaća jaja ili domaće piliće!</p>
+                <p class="ad-subtitle">Najbolje kvalitete za tvoj sto</p>
+                <a href="https://www.instagram.com/farma_blaz/?hl=en" target="_blank" class="ad-button">Naruči sada</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 
